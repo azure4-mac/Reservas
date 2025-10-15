@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Valida - Reserva de Espaços</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0ea5a4',
+            accent: '#2563eb'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-800 antialiased">
+
+<header class="bg-white shadow">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="../static/iconValida.png" alt="Logo" class="w-10 h-10 rounded-md bg-accent object-cover" />
+      <div><h1 class="text-xl font-semibold">Valida</h1></div>
+    </div>
+    <nav id="desktopMenu" class="hidden md:flex gap-4 items-center">
+      <div id="userInfo" class="hidden items-center gap-2">
+        <span id="userName" class="text-sm font-medium"></span>
+        <button id="logoutBtn" class="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md">Sair</button>
+      </div>
+      <div id="authButtons">
+        <button id="loginBtn" class="ml-2 px-3 py-1.5 bg-primary text-white rounded-md text-sm">Entrar</button>
+        <button id="registerBtn" class="ml-2 px-3 py-1.5 bg-accent text-white rounded-md text-sm">Cadastrar</button>
+      </div>
+    </nav>
+    <div class="md:hidden">
+      <button id="mobileMenuBtn" class="p-2 rounded-md hover:bg-gray-100"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+    </div>
+  </div>
+</header>
+
+<section id="instSelectorSection" class="bg-gradient-to-r from-primary/10 to-gray-50 py-10 mb-6 hidden">
+  <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-6">
+    <div>
+      <h2 class="text-3xl sm:text-4xl font-bold mb-2 text-primary">Reserve espaços com facilidade</h2>
+      <p id="welcomeMessage" class="text-gray-700 text-lg"></p>
+    </div>
+    <div class="bg-white rounded-lg shadow px-6 py-4 flex flex-col items-start">
+      <label for="instSelect" class="font-medium text-gray-700 mb-2">Instituição ativa:</label>
+      <div class="flex gap-2 items-center">
+        <select id="instSelect" class="border rounded px-3 py-2 text-gray-800 focus:ring-primary focus:border-primary"></select>
+        <button id="btnTrocarInst" class="bg-primary hover:bg-accent text-white px-4 py-2 rounded transition">Trocar</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="flex justify-center items-center bg-gray-50">
+  <div class="bg-white rounded-2xl shadow-md p-8 w-full max-w-md">
+    <h3 class="text-center text-xl font-semibold text-blue-600 mb-6">Entrar por token</h3>
+    <div class="flex gap-2">
+      <input
+        id="joinToken"
+        type="text"
+        placeholder="Cole o token da instituição"
+        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+      />
+      <button
+        id="joinBtn"
+        class="px-5 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+      >
+        Entrar
+      </button>
+    </div>
+  </div>
+</section>
+
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <div id="cardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <div id="modal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50 overflow-y-auto p-4">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-xl mx-4">
+      <div class="px-6 py-4 border-b flex justify-between items-center"><h4 id="modalTitle" class="font-semibold">Detalhes do Espaço</h4><button id="closeModal" class="text-gray-500 hover:text-gray-700">&times;</button></div>
+      <div class="px-6 py-4" id="modalBody"></div>
+      <div class="px-6 py-4 border-t flex justify-end gap-3"><button id="cancelBtn" class="px-4 py-2 rounded-md border">Fechar</button><button id="reserveBtn" class="px-4 py-2 rounded-md bg-primary text-white">Reservar</button></div>
+    </div>
+  </div>
+
+  <div id="loginModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
+      <div class="px-6 py-4 border-b flex justify-between items-center"><h4 class="font-semibold">Entrar</h4><button id="closeLoginModal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button></div>
+      <form id="loginForm" class="px-6 py-4 space-y-3"><input id="loginEmail" type="email" placeholder="E-mail" class="w-full px-3 py-2 border rounded-md" required /><input id="loginPassword" type="password" placeholder="Senha" class="w-full px-3 py-2 border rounded-md" required /></form>
+      <div class="px-6 py-4 border-t flex justify-end gap-3"><button id="cancelLoginBtn" class="px-4 py-2 rounded-md border">Cancelar</button><button id="submitLoginBtn" type="submit" form="loginForm" class="px-4 py-2 rounded-md bg-primary text-white">Entrar</button></div>
+    </div>
+  </div>
+  <div id="registerModal" class="fixed inset-0 hidden items-center justify-center bg-black/40 z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
+      <div class="px-6 py-4 border-b flex justify-between items-center"><h4 class="font-semibold">Cadastrar</h4><button id="closeRegisterModal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button></div>
+      <form id="registerForm" class="px-6 py-4 space-y-3">
+        <div class="flex gap-4 mb-4"><label class="flex items-center gap-2"><input type="radio" name="userType" value="user" checked class="accent-primary"> Usuário</label><label class="flex items-center gap-2"><input type="radio" name="userType" value="admin" class="accent-primary"> Administrador</label></div>
+        <input id="registerName" type="text" placeholder="Nome Completo" class="w-full px-3 py-2 border rounded-md" required />
+        <input id="registerCpf" type="text" placeholder="CPF" class="w-full px-3 py-2 border rounded-md" required />
+        <input id="registerEmail" type="email" placeholder="E-mail" class="w-full px-3 py-2 border rounded-md" required />
+        <input id="registerPassword" type="password" placeholder="Senha" class="w-full px-3 py-2 border rounded-md" required />
+      </form>
+      <div class="px-6 py-4 border-t flex justify-end gap-3"><button id="cancelRegisterBtn" class="px-4 py-2 rounded-md border">Cancelar</button><button id="submitRegisterBtn" type="submit" form="registerForm" class="px-4 py-2 rounded-md bg-accent text-white">Cadastrar</button></div>
+    </div>
+  </div>
+
+ <script>
+
+  // ------------------ GERENCIAMENTO DE AUTENTICAÇÃO E UI ------------------
+  const authManager = {
+    session: null,
+    init() {
+      this.session = JSON.parse(sessionStorage.getItem('userData') || 'null');
+      this.updateUI();
+    },
+    login(data) {
+      sessionStorage.setItem('userData', JSON.stringify(data));
+      this.session = data;
+      this.updateUI();
+      // Recarrega a página para carregar os dados corretos da instituição
+      location.reload();
+    },
+    logout() {
+      sessionStorage.removeItem('userData');
+      this.session = null;
+      this.updateUI();
+      location.reload();
+    },
+    isLoggedIn() {
+      return this.session !== null;
+    },
+    updateUI() {
+      const loggedIn = this.isLoggedIn();
+      const userData = loggedIn ? this.session.user_data : null;
+
+      const elements = {
+        userInfo: document.getElementById('userInfo'),
+        authButtons: document.getElementById('authButtons'),
+        userName: document.getElementById('userName'),
+        logoutBtn: document.getElementById('logoutBtn'),
+        instSelectorSection: document.getElementById('instSelectorSection'),
+        welcomeMessage: document.getElementById('welcomeMessage')
+      };
+
+      if (loggedIn) {
+        elements.userName.textContent = userData.nome;
+        elements.userInfo.classList.replace('hidden', 'flex');
+        elements.authButtons.classList.add('hidden');
+        elements.logoutBtn.onclick = () => this.logout();
+        
+        // Exibe o seletor de instituição e personaliza a mensagem
+        elements.instSelectorSection.classList.remove('hidden');
+        elements.welcomeMessage.textContent = `Olá, ${userData.nome.split(' ')[0]}! Escolha uma instituição para ver os espaços disponíveis.`;
+      } else {
+        elements.userInfo.classList.add('hidden');
+        elements.authButtons.classList.remove('hidden');
+        elements.instSelectorSection.classList.add('hidden');
+      }
+    }
+  };
+
+  // ------------------ LÓGICA DA PÁGINA ------------------
+  const container = document.getElementById('cardsContainer');
+  const modal = document.getElementById('modal');
+  let selectedSlot = null;
+
+  function setupInstitutionSwitcher() {
+    const session = authManager.session;
+    if (!session || !session.instituicoes || session.instituicoes.length === 0) {
+        document.getElementById('instSelectorSection').classList.add('hidden');
+        return;
+    }
+
+    const instSelect = document.getElementById('instSelect');
+    const btnTrocar = document.getElementById('btnTrocarInst');
+    instSelect.innerHTML = ''; // Limpa opções antigas
+
+    session.instituicoes.forEach(i => {
+      const opt = document.createElement('option');
+      opt.value = i.id;
+      opt.textContent = i.nome;
+      if (i.id === session.user_data.active_inst_id) opt.selected = true;
+      instSelect.appendChild(opt);
+    });
+
+    btnTrocar.onclick = async () => {
+      const inst_id = Number(instSelect.value);
+      const { user_data, user_type } = session;
+      
+      // CORREÇÃO: O endpoint é singular ('user' ou 'admin')
+      const endpoint = `/api/${user_type}/${user_data.id}/switch_inst`;
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inst_id })
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.erro || 'Erro desconhecido');
+        
+        // Atualiza a sessão local e recarrega a página
+        const updatedUserData = { ...user_data, active_inst_id: inst_id };
+        authManager.login({ ...session, user_data: updatedUserData });
+
+      } catch (err) {
+        console.error('Falha ao trocar instituição:', err);
+      }
+    };
+  }
+
+  async function fetchEspacos() {
+    const active_inst_id = authManager.session?.user_data?.active_inst_id;
+    if (!active_inst_id) {
+        container.innerHTML = '<div class="col-span-full text-center text-gray-500">Selecione uma instituição para ver os espaços disponíveis.</div>';
+        return;
+    }
+    try {
+      const res = await fetch(`/api/espacos?inst_id=${active_inst_id}`);
+      if (!res.ok) throw new Error('Falha ao buscar espaços.');
+      renderCards(await res.json());
+    } catch (err) {
+      container.innerHTML = `<div class="col-span-full text-center text-red-500">${err.message}</div>`;
+    }
+  }
+
+  function renderCards(list) {
+    container.innerHTML = list.length === 0 
+      ? '<div class="col-span-full text-center text-gray-500">Nenhum espaço encontrado para esta instituição.</div>' 
+      : '';
+    list.forEach(e => {
+      const card = document.createElement('article');
+      card.className = 'bg-white rounded-lg shadow p-4 flex flex-col justify-between hover:shadow-md transition cursor-pointer';
+      card.innerHTML = `
+        <div>
+          <h3 class="font-semibold text-lg">${e.nome}</h3>
+          <p class="text-sm text-gray-500">${e.descricao || 'Sem descrição.'}</p>
+          <div class="mt-3 text-xs flex items-center gap-2">
+            <span class="${e.disponibilidade ? 'text-green-600' : 'text-red-600'} font-medium">${e.disponibilidade ? 'Disponível' : 'Indisponível'}</span>
+            <span class="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700">${e.tipo}</span>
+          </div>
+        </div>`;
+      card.onclick = () => openEspacoModal(e);
+      container.appendChild(card);
+    });
+  }
+
+  function openEspacoModal(espaco) {
+    const today = new Date().toISOString().split('T')[0];
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + espaco.antecedencia_maxima_dias);
+    const maxDateStr = maxDate.toISOString().split('T')[0];
+    const isLoggedIn = authManager.isLoggedIn();
+    const userData = authManager.session?.user_data;
+
+    document.getElementById('modalTitle').textContent = espaco.nome;
+    document.getElementById('modalBody').innerHTML = `
+      <p class="text-gray-700 mb-4">${espaco.descricao}</p>
+      ${!isLoggedIn ? '<p class="text-sm text-red-600 mb-3">Você precisa fazer login para poder reservar.</p>' : ''}
+      <div class="${isLoggedIn ? '' : 'opacity-50 pointer-events-none'}">
+        <label class="block text-sm text-gray-600 mb-1">Seu E-mail</label>
+        <input class="w-full px-3 py-2 border rounded-md mb-3 bg-gray-100" value="${userData?.email || ''}" readonly />
+        <label class="block text-sm text-gray-600 mb-1">Escolha a Data</label>
+        <input id="dateInput" type="date" class="w-full px-3 py-2 border rounded-md mb-3" min="${today}" max="${maxDateStr}" required />
+        <label class="block text-sm text-gray-600 mb-1">Horários Disponíveis</label>
+        <div id="slotsContainer" class="flex flex-wrap gap-2 mb-3 border p-3 rounded-md min-h-[50px]">
+          <p class="text-sm text-gray-500">Selecione uma data para ver os horários.</p>
+        </div>
+        <label class="block text-sm text-gray-600 mb-1">Observações (opcional)</label>
+        <textarea id="obsInput" rows="2" class="w-full px-3 py-2 border rounded-md"></textarea>
+      </div>`;
+
+    document.getElementById('dateInput').onchange = () => {
+      selectedSlot = null;
+      fetchAvailableSlots(espaco.id, document.getElementById('dateInput').value);
+    };
+    
+    const reserveBtn = document.getElementById('reserveBtn');
+    reserveBtn.disabled = !espaco.disponibilidade || !isLoggedIn;
+    reserveBtn.onclick = () => handleReserve(espaco);
+    modal.classList.replace('hidden', 'flex');
+  }
+
+  async function fetchAvailableSlots(espacoId, date) {
+    const slotsContainer = document.getElementById('slotsContainer');
+    slotsContainer.innerHTML = '<p class="text-sm text-gray-500">Carregando...</p>';
+    try {
+      const res = await fetch(`/api/espacos/${espacoId}/horarios_disponiveis?data=${date}`);
+      if (!res.ok) throw new Error('Não foi possível buscar os horários.');
+      const slots = await res.json();
+      slotsContainer.innerHTML = slots.length === 0 ? '<p class="text-sm text-red-500">Nenhum horário disponível.</p>' : '';
+      slots.forEach(slot => {
+        const btn = document.createElement('button');
+        btn.className = 'px-3 py-1.5 border rounded-md text-sm hover:bg-primary hover:text-white transition';
+        btn.textContent = slot.inicio;
+        btn.onclick = () => {
+          document.querySelectorAll('#slotsContainer button').forEach(b => b.classList.remove('bg-primary','text-white'));
+          btn.classList.add('bg-primary','text-white');
+          selectedSlot = slot.inicio;
+        };
+        slotsContainer.appendChild(btn);
+      });
+    } catch (err) {
+      slotsContainer.innerHTML = `<p class="text-sm text-red-500">${err.message}</p>`;
+    }
+  }
+
+  async function handleReserve(espaco) {
+    const date = document.getElementById('dateInput').value;
+    if (!date || !selectedSlot) return alert("Por favor, selecione uma data e um horário.");
+    try {
+      const res = await fetch('/api/reservas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_espaco: espaco.id,
+          user_email: authManager.session.user_data.email,
+          data_reserva: date,
+          hora_inicio: selectedSlot,
+          observacoes: document.getElementById('obsInput').value
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.erro || 'Falha ao reservar.');
+      alert(`Reserva criada com sucesso!`);
+      modal.classList.replace('flex', 'hidden');
+    } catch (err) {
+      //alert(`Erro: ${err.message}`);
+    }
+  }
+  
+  // ------------------ INICIALIZAÇÃO GERAL ------------------
+  document.addEventListener('DOMContentLoaded', () => {
+    authManager.init();
+    
+    if (authManager.isLoggedIn()) {
+      setupInstitutionSwitcher();
+      fetchEspacos();
+    }
+
+    // Handlers para modais de autenticação
+    const loginModal = document.getElementById('loginModal');
+    const registerModal = document.getElementById('registerModal');
+    document.getElementById('loginBtn').onclick = () => loginModal.classList.replace('hidden', 'flex');
+    document.getElementById('registerBtn').onclick = () => registerModal.classList.replace('hidden', 'flex');
+    document.getElementById('closeLoginModal').onclick = () => loginModal.classList.replace('flex', 'hidden');
+    document.getElementById('closeRegisterModal').onclick = () => registerModal.classList.replace('flex', 'hidden');
+    
+    // Handlers para fechar modal principal
+    document.getElementById('closeModal').onclick = () => modal.classList.replace('flex', 'hidden');
+    document.getElementById('cancelBtn').onclick = () => modal.classList.replace('flex', 'hidden');
+
+    // Handler para formulário de login
+    document.getElementById('loginForm').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: document.getElementById('loginEmail').value, senha: document.getElementById('loginPassword').value })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Erro ao logar.');
+            authManager.login(data);
+        } catch (err) {
+            //alert(`Erro: ${err.message}`);
+        }
+    };
+    // Handler para formulário de registro
+    document.getElementById('registerForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const userType = document.querySelector('input[name="userType"]:checked').value;
+        const payload = {
+            cpf: document.getElementById('registerCpf').value,
+            nome: document.getElementById('registerName').value,
+            email: document.getElementById('registerEmail').value,
+            senha: document.getElementById('registerPassword').value
+        };
+        try {
+            const res = await fetch(`/api/register/${userType}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!res.ok) throw new Error((await res.json()).description || 'Erro ao cadastrar.');
+            alert('Cadastro realizado! Faça o login.');
+            registerModal.classList.replace('flex', 'hidden');
+        } catch (err) {
+            //alert(`Erro: ${err.message}`);
+        }
+    };
+  });
+</script>
+
+</body>
+</html>
